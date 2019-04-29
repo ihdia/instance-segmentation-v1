@@ -120,7 +120,7 @@ def display_instances(image, boxes, masks, class_ids, class_names,
     ax.set_xlim(-10, width + 10)
     ax.axis('off')
     ax.set_title(title)
-
+    cn=[]
     masked_image = image.astype(np.uint32).copy()
     for i in range(N):
         color = colors[i]
@@ -162,7 +162,7 @@ def display_instances(image, boxes, masks, class_ids, class_names,
         padded_mask[1:-1, 1:-1] = mask
         #padded_mask=cv2.resize(padded_mask.astype(np.uint8),None,fx=1,fy=0.25)
         contours = find_contours(padded_mask, 0.5)
-
+        cn.append(contours)
         for verts in contours:
             # Subtract the padding and flip (y, x) to (x, y)
             verts = np.fliplr(verts) - 1
@@ -172,7 +172,7 @@ def display_instances(image, boxes, masks, class_ids, class_names,
     ax.imshow(masked_image.astype(np.uint8))
     if auto_show:
         plt.show()
-    return colors
+    return colors,cn
 
 
 def display_differences(image,

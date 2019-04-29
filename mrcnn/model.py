@@ -23,7 +23,6 @@ import keras.layers as KL
 import keras.losses as LS
 import keras.engine as KE
 import keras.models as KM
-import lovasz_losses_tf as L
 from mrcnn import utils
 from scipy import ndimage
 import tensorflow.contrib.eager as tfe
