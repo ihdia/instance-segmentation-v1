@@ -31,80 +31,17 @@ MODEL_DIR = os.path.join(ROOT_DIR, "logs")
 config = train.BalloonConfig()
 BALLOON_DIR = os.path.join(ROOT_DIR, "datasets/doc")
 
-class InferenceConfig(config.__class__):
-# Run detection on one image at a time
-	GPU_COUNT = 1
-	IMAGES_PER_GPU = 1
-	IMAGE_RESIZE_MODE = "square"
-	DETECTION_MIN_CONFIDENCE = 0.6
-	DETECTION_NMS_THRESHOLD = 0.3
-	PRE_NMS_LIMIT = 12000
-	RPN_ANCHOR_SCALES = (8,32,64,256,1024)
-	RPN_ANCHOR_RATIOS = [1,3,10]
 
-	POST_NMS_ROIS_INFERENCE = 12000
-	
-	'''
-	
-	GPU_COUNT = 1
-	IMAGES_PER_GPU = 1
-	IMAGE_RESIZE_MODE = "square"
-	DETECTION_MIN_CONFIDENCE = 0.3
-	DETECTION_NMS_THRESHOLD = 0.3
-	PRE_NMS_LIMIT = 12000
-	RPN_ANCHOR_SCALES = (8,32,64,256,1024)
-	RPN_ANCHOR_RATIOS = [1,3,10]
-
-	POST_NMS_ROIS_INFERENCE = 12000
-	'''
 def get_ax(rows=1, cols=1, size=16):
 	_, ax = plt.subplots(rows, cols, figsize=(size*cols, size*rows))
 	return ax
-def runtest(img):
-
-	K.clear_session()
-
-	config = InferenceConfig()
-	DEVICE = "/cpu:0"  # /cpu:0 or /gpu:0
-
-	# Inspect the model in training or inference modes
-	# values: 'inference' or 'training'
-	# TODO: code for 'training' test mode not ready yet
-	TEST_MODE = "inference"
-
-	dataset = train.BalloonDataset()
-	dataset.load_balloon(BALLOON_DIR, "val")
-
-	# Must call before using the dataset
-	dataset.prepare()
-
-	print("Images: {}\nClasses: {}".format(len(dataset.image_ids), dataset.class_names))
-	with tf.device(DEVICE):
-		model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR,
-							  config=config)
-	#weights_path = model.find_last()
-
-	# Load weights
-	weights_path= "/home/abhishek/prusty/Mask_RCNN/logs/object20190207T2135/mask_rcnn_object_0054.h5"
-
-	print("Loading weights ", weights_path)
-
-	model.load_weights(weights_path, by_name=True)
-	#model=load_model (weights_path)
+def runtest(img,model,dataset):
 	import json
 	image=cv2.cvtColor(img,cv2.COLOR_BGR2RGB)
 	image,_,scale,padding,_=utils.resize_image(image,min_dim=256, max_dim=1024)
-	print(padding)
-	# plt.figure(figsize=(15,15))
-	# plt.axis('off')
-	# plt.imshow(image)
-	print(image.shape)
 	results = model.detect([image], verbose=1)
-	#print(results)
-	# Display results
 	ax = get_ax(1)
 	r = results[0]
-	#print(r)
 	ccc,contours=visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'], 
 	                            dataset.class_names, r['scores'], ax=ax,
 	                            title="Predictions",show_bbox=False,show_mask=True)
@@ -231,8 +168,4 @@ def runtest(img):
 	    f.write(end)
 	h, w = image.shape[:2]
 	image=image[padding[0][0]:h-padding[0][1],padding[1][0]:w-padding[1][1]]
-	print(scale)
-	# image = utils.resize(image, (round(h *scale), round(w *scale)),
-	#                        preserve_range=True)
-	# cv2.imwrite('/../../prusty/Mask_RCNN/samples/balloon/static/images/1.jpg', cv2.cvtColor(image.astype('float32'), cv2.COLOR_RGB2BGR))
 	plt.savefig('/home/abhishek/prusty/Instance-segmentation/main/doc/static/images/2.jpg',bbox_inches='tight')
