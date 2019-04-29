@@ -1,0 +1,50 @@
+<html>
+<body>
+<h1 align='center'>Document Region Segmentation</h1>
+
+
+
+<div align='center'>
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script type=text/javascript>
+        $(function(){
+          $('a#test').bind('click', function() {
+            $.getJSON('/background_process_test',
+                function(data) {
+                  window.location.reload(true);
+            });
+            return false;
+          });
+        });
+</script>
+
+
+
+
+  <h4>STEP1 : Choose input file and click on "Submit"</h4>
+<form action = "http://localhost:5000/uploader" method = "POST" 
+   enctype = "multipart/form-data">
+   <input type = "file" name = "file" />
+   <input type = "submit" class='btn btn-default' />
+</form>
+
+    <h4 >STEP2 : Click on "Create json" to output json file</h4>
+        <form>
+            <a href=# id=test><button class='btn btn-default'>Create json</button></a>
+        </form>
+
+
+<!--   <div  style="float:left;width:60%;" class="col-md-7">
+    <h3></h3>
+    <br>
+    <div class="row">
+      <div class="col-md-6">
+        <p><img src="/static/images/2.jpg" class="img" align='left'></p>
+      </div>
+    </div>
+  </div> -->
+
+</div>
+<!-- <br> -->
+</body>
+
