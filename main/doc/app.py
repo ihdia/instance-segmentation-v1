@@ -2,6 +2,7 @@ import os
 from flask import Flask, render_template, request, jsonify,redirect,session,flash
 from werkzeug import secure_filename
 from modeltest import *
+import cv2
 import os
 import sys
 import random
@@ -14,7 +15,6 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from keras.models import load_model
-import cv2
 import keras.backend as K
 ROOT_DIR = os.path.abspath("../../")
 
@@ -76,7 +76,7 @@ def load_model():
 	with tf.device(DEVICE):
 		model = modellib.MaskRCNN(mode="inference", model_dir=MODEL_DIR,
 							  config=config)
-	weights_path= "/home/abhishek/prusty/Mask_RCNN/logs/object20190207T2135/mask_rcnn_object_0054.h5"
+	weights_path= ROOT_DIR+"/pretrained_model_indiscapes.h5"
 	print("Loading weights ", weights_path)
 	model.load_weights(weights_path, by_name=True)
 	global graph
