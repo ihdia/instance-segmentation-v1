@@ -11,26 +11,20 @@ import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from keras.models import load_model
-import cv2
 import keras.backend as K
 ROOT_DIR = os.path.abspath("../../")
-
 sys.path.append(ROOT_DIR)
 from mrcnn import utils
 from mrcnn import visualize
 from mrcnn.visualize import display_images
 import mrcnn.model as modellib
 from mrcnn.model import log
-
 from main.doc import train
 
-# Directory to save logs and trained model
-MODEL_DIR = os.path.join(ROOT_DIR, "logs")
-
-
-config = train.BalloonConfig()
-BALLOON_DIR = os.path.join(ROOT_DIR, "datasets/doc")
-
+config = train.Config()
+DOCDATA = ROOT_DIR+"datasets/doc"
+OUTPUTPATH=  ROOT_DIR+"/main/doc/static/images/2.jpg"
+IMG1PATH= ROOT_DIR+"/main/doc/static/images/1.jpg"
 
 def get_ax(rows=1, cols=1, size=16):
 	_, ax = plt.subplots(rows, cols, figsize=(size*cols, size*rows))
@@ -85,7 +79,7 @@ def runtest(img,model,dataset):
 	  },
 	  "_via_img_metadata": {
 	    "": {
-	      "filename": \""""+str("/../../prusty/Mask_RCNN/samples/balloon/static/images/1.jpg")+"""\",
+	      "filename": \""""+str(IMG1PATH)+"""\",
 	      "size": -1,
 	      "regions": [
 	"""
@@ -168,4 +162,4 @@ def runtest(img,model,dataset):
 	    f.write(end)
 	h, w = image.shape[:2]
 	image=image[padding[0][0]:h-padding[0][1],padding[1][0]:w-padding[1][1]]
-	plt.savefig('/home/abhishek/prusty/Instance-segmentation/main/doc/static/images/2.jpg',bbox_inches='tight')
+	plt.savefig(OUTPUTPATH,bbox_inches='tight')

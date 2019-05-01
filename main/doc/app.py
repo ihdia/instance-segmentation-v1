@@ -2,7 +2,6 @@ import os
 from flask import Flask, render_template, request, jsonify,redirect,session,flash
 from werkzeug import secure_filename
 from modeltest import *
-import cv2
 import os
 import sys
 import random
@@ -29,16 +28,15 @@ from mrcnn.model import log
 from main.doc import train
 
 MODEL_DIR = os.path.join(ROOT_DIR, "logs")
-
-
-config = train.BalloonConfig()
-BALLOON_DIR = os.path.join(ROOT_DIR, "datasets/doc")
-
+config = train.Config()
+MAIN_DIR = os.path.join(ROOT_DIR, "datasets/doc")
 app = Flask(__name__)
 app.secret_key = 'f3cfe9ed8fae309f02079dbf'
-UPLOAD_FOLDER = '/home/abhishek/prusty/Instance-segmentation/main/doc/static/images/'
+
+UPLOAD_FOLDER = ROOT_DIR+"/main/doc/static/images/"
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 model =None
+
 class InferenceConfig(config.__class__):
 	GPU_COUNT = 1
 	IMAGES_PER_GPU = 1
@@ -69,8 +67,8 @@ def load_model():
 	DEVICE = "/cpu:0"  # /cpu:0 or /gpu:0
 	TEST_MODE = "inference"
 	global dataset
-	dataset = train.BalloonDataset()
-	dataset.load_balloon(BALLOON_DIR, "val")
+	dataset = train.Dataset()
+	dataset.load_data(MAIN_DIR, "val")
 	dataset.prepare()
 
 	print("Images: {}\nClasses: {}".format(len(dataset.image_ids), dataset.class_names))
@@ -110,7 +108,7 @@ def add_header(r):
 
 @app.route('/background_process_test')
 def background_process_test():
-	filepath="/home/abhishek/prusty/Instance-segmentation/main/doc/static/images/1.jpg"
+	filepath=UPLOAD_FOLDER+"1.jpg"
 	img=cv2.imread(filepath,1)
 	with graph.as_default(): 
 		runtest(img,model,dataset)

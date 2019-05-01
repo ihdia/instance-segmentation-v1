@@ -1,14 +1,25 @@
 
 
+#Instructions for running 
+'''
+# Train a new model starting from pre-trained COCO weights
+python3 train.py train --dataset=/path/to/doc/dataset --weights=coco
+
+# Resume training a model that you had trained earlier
+python3 train.py train --dataset=/path/to/doc/dataset --weights=last
+
+# Train a new model starting from ImageNet weights
+python3 train.py train --dataset=/path/to/doc/dataset --weights=imagenet
+'''
+#  python3 train.py train --dataset=/home/abhishek/prusty/segr/datasets/doc --weights=coco
+
 import os
 import sys
 import json
 import datetime
 import numpy as np
 import skimage.draw
-from imgaug import augmenters as iaa
 from skimage.transform import resize
-import cv2
 
 ROOT_DIR = os.path.abspath("../../")
 
@@ -25,46 +36,22 @@ DEFAULT_LOGS_DIR = os.path.join(ROOT_DIR, "logs")
 ############################################################
 #  Configurations
 ############################################################
-EPOCH=300
-def make_mask_weight(masks):
-    masks=np.array(masks)
-    #print(masks.shape)
-    masks = np.reshape(masks, (-1, masks.shape[1], masks.shape[2]))
-    nrows, ncols = masks.shape[1:]
-    masks = (masks > 0).astype(int)
-    distMap = np.zeros_like(masks)
-    X1, Y1 = np.meshgrid(np.arange(nrows), np.arange(ncols))
-    X1, Y1 = np.c_[X1.ravel(), Y1.ravel()].T
-    for i, mask in enumerate(masks):
-        # find the boundary of each mask,
-        # compute the distance of each pixel from this boundary
-        bounds = ndimage.distance_transform_edt(mask)
-        #print(bounds)
-        mx = np.max(bounds)
-        bounds[bounds>0]=mx-bounds[bounds>0]
-        #print(bounds)
-        #print(bounds.shape)
-        distMap[i:] = bounds
 
-    #print(distMap)
-    return distMap
-class BalloonConfig(Config):
-	"""Configuration for training on the toy  dataset.
+class Config(Config):
+	"""Configuration for training on the doc  dataset.
 	Derives from the base Config class and overrides some values.
+	Go to config.py in mrcnn if you want to change other hyperparameters 
 	"""
-	# Give the configuration a recognizable name
 	NAME = "object"
 	GPU_COUNT=1
-	# We use a GPU with 12GB memory, which can fit two images.
-	# Adjust down if you use a smaller GPU.
 	IMAGES_PER_GPU = 1
 	# Number of classes (including background)
-	NUM_CLASSES = 11  # Background + balloon
+	NUM_CLASSES = 11 
 	# Number of training steps per epoch
 	STEPS_PER_EPOCH = 500
 	USE_MINI_MASK = False
 	WEIGHT_DECAY=0.001
-	# Skip detections with < 80% confidence
+	# Skip detections with < 50% confidence
 	DETECTION_MIN_CONFIDENCE = 0.5
 
 
@@ -72,13 +59,9 @@ class BalloonConfig(Config):
 #  Dataset
 ############################################################
 
-class BalloonDataset(utils.Dataset):
+class Dataset(utils.Dataset):
 
-	def load_balloon(self, dataset_dir, subset):
-		"""Load a subset of the Balloon dataset.
-		dataset_dir: Root directory of the dataset.
-		subset: Subset to load: train or val
-		"""
+	def load_data(self, dataset_dir, subset):
 		# Add classes. We have only one class to add.
 		classes = ['Hole(Virtual)','Hole(Physical)','Character Line Segment','Physical Degradation','Page Boundary','Character Component','Picture','Decorator','Library Marker']
 		self.add_class("object", 1, "H-V")
@@ -96,22 +79,6 @@ class BalloonDataset(utils.Dataset):
 		assert subset in ["train", "val"]
 		dataset_dir = os.path.join(dataset_dir, subset)
 
-		# Load annotations
-		# VGG Image Annotator (up to version 1.6) saves each image in the form:
-		# { 'filename': '28503151_5b5b7ec140_b.jpg',
-		#   'regions': {
-		#       '0': {
-		#           'region_attributes': {},
-		#           'shape_attributes': {
-		#               'all_points_x': [...],
-		#               'all_points_y': [...],
-		#               'name': 'polygon'}},
-		#       ... more regions ...
-		#   },
-		#   'size': 100202
-		# }
-		# We mostly care about the x and y coordinates of each region
-		# Note: In VIA 2.0, regions was changed from a dict to a list.
 		annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json")))
 		annotations=	annotations["_via_img_metadata"]
 		annotations = list(annotations.values())  # don't need the dict keys
@@ -168,16 +135,16 @@ class BalloonDataset(utils.Dataset):
 			ff=a['filename'].split('/')[-2:]
 			#print(ff)
 			flg=0
-			if(ff[0]=='illustrations'):
+			if(ff[0]=='PIH_images'):
 				flg=0
 				ff1=ff[0]+'/'+ff[1]
-				image_path ='/home/abhishek/prusty/'+ff1
+				image_path =ROOT_DIR+ff1
  
 			else:
 				flg=1
 				image_path=os.path.join(dataset_dir,a['filename'])
 				image_pa = image_path.split("/")
-				image_path = "/home/abhishek/prusty/bhoomi_images/"
+				image_path =os.path.join(ROOT_DIR, "bhoomi_images")
 				flag=0
 				for ppp in image_pa:
 				 if(ppp=="images"):
@@ -192,8 +159,6 @@ class BalloonDataset(utils.Dataset):
 			except Exception:
 				continue
 
-			#image=cv2.resize(image,(1024,800))
-			#image=cv2.resize(image,None,fx=1,fy=4,interpolation=cv2.INTER_CUBIC)
 			height, width = image.shape[:2]
 
 			self.add_image(
@@ -212,7 +177,6 @@ class BalloonDataset(utils.Dataset):
 			one mask per instance.
 		class_ids: a 1D array of class IDs of the instance masks.
 		"""
-		# If not a balloon dataset image, delegate to parent class.
 		image_info = self.image_info[image_id]
 		if image_info["source"] != "object":
 			return super(self.__class__, self).load_mask(image_id)
@@ -231,9 +195,6 @@ class BalloonDataset(utils.Dataset):
 				continue
 			try:
 				mask[rr, cc, i] = 1
-				#mm=cv2.resize(mask[:,:,i],(0,0),fx=1,fy=4,interpolation=cv2.INTER_CUBIC)
-				#print("mm: ",mm.shape)
-				#mask[:,:,i]=mm[:info["height"],:]
 			except Exception as e:
 				print(e)
 
@@ -255,40 +216,19 @@ class BalloonDataset(utils.Dataset):
 def train(model):
 	"""Train the model."""
 	# Training dataset.
-	dataset_train = BalloonDataset()
-	dataset_train.load_balloon(args.dataset, "train")
+	dataset_train = Dataset()
+	dataset_train.load_data(args.dataset, "train")
 	dataset_train.prepare()
 
 	# Validation dataset
-	dataset_val = BalloonDataset()
-	dataset_val.load_balloon(args.dataset, "val")
+	dataset_val = Dataset()
+	dataset_val.load_data(args.dataset, "val")
 	dataset_val.prepare()
 
-	# *** This training schedule is an example. Update to your needs ***
-	# Since we're using a very small dataset, and starting from
-	# COCO trained weights, we don't need to train too long. Also,
-	# no need to train all layers, just the heads should do it.
-
-	
-	# augmentation = iaa.Sometimes(.667, iaa.Sequential([
-	# 	# Strengthen or weaken the contrast in each image.
-	# 	iaa.ContrastNormalization((0.75, 1.25)),
-	# 	# Make some images brighter and some darker.
-	# 	# In 20% of all cases, we sample the multiplier once per channel,
-	# 	# which can end up changing the color of the images.
-	# 	iaa.Multiply((0.8, 1.2)),
-	# 	# Apply affine transformations to each image.
-	# 	# Scale/zoom them, translate/move them, rotate them and shear them.
-	# 	iaa.Affine(
-	# 		scale={"x": (0.8, 1.2), "y": (0.8, 1.2)},
-	# 		translate_percent={"x": (-0.1, 0.1), "y": (-0.1, 0.1)},
-	# 		rotate=(-10, 10),
-	# 		shear=(-8, 8)
-	# 	),
-	# 	iaa.CoarseDropout(0.02, size_percent=0.5)	
-	# ], random_order=True)) # apply augmenters in random order
 
 
+	# Training - Stage 1
+	# Finetune task specific network heads
 	print("Training network heads")
 	model.train(dataset_train, dataset_val,
 						learning_rate=config.LEARNING_RATE,
@@ -312,78 +252,6 @@ def train(model):
 				layers='all')
 
 
-def color_splash(image, mask):
-	"""Apply color splash effect.
-	image: RGB image [height, width, 3]
-	mask: instance segmentation mask [height, width, instance count]
-
-	Returns result image.
-	"""
-	# Make a grayscale copy of the image. The grayscale copy still
-	# has 3 RGB channels, though.
-	gray = skimage.color.gray2rgb(skimage.color.rgb2gray(image)) * 255
-	# Copy color pixels from the original color image where mask is set
-	if mask.shape[-1] > 0:
-		# We're treating all instances as one, so collapse the mask into one layer
-		mask = (np.sum(mask, -1, keepdims=True) >= 1)
-		splash = np.where(mask, image, gray).astype(np.uint8)
-	else:
-		splash = gray.astype(np.uint8)
-	return splash
-
-
-def detect_and_color_splash(model, image_path=None, video_path=None):
-	assert image_path or video_path
-
-	# Image or video?
-	if image_path:
-		# Run model detection and generate the color splash effect
-		print("Running on {}".format(args.image))
-		# Read image
-		image = skimage.io.imread(args.image)
-		# Detect objects
-		r = model.detect([image], verbose=1)[0]
-		# Color splash
-		splash = color_splash(image, r['masks'])
-		# Save output
-		file_name = "splash_{:%Y%m%dT%H%M%S}.png".format(datetime.datetime.now())
-		skimage.io.imsave(file_name, splash)
-	elif video_path:
-		import cv2
-		# Video capture
-		vcapture = cv2.VideoCapture(video_path)
-		width = int(vcapture.get(cv2.CAP_PROP_FRAME_WIDTH))
-		height = int(vcapture.get(cv2.CAP_PROP_FRAME_HEIGHT))
-		fps = vcapture.get(cv2.CAP_PROP_FPS)
-
-		# Define codec and create video writer
-		file_name = "splash_{:%Y%m%dT%H%M%S}.avi".format(datetime.datetime.now())
-		vwriter = cv2.VideoWriter(file_name,
-								  cv2.VideoWriter_fourcc(*'MJPG'),
-								  fps, (width, height))
-
-		count = 0
-		success = True
-		while success:
-			print("frame: ", count)
-			# Read next image
-			success, image = vcapture.read()
-			if success:
-				# OpenCV returns images as BGR, convert to RGB
-				image = image[..., ::-1]
-				# Detect objects
-				r = model.detect([image], verbose=0)[0]
-				# Color splash
-				splash = color_splash(image, r['masks'])
-				# RGB -> BGR to save image to video
-				splash = splash[..., ::-1]
-				# Add image to video writer
-				vwriter.write(splash)
-				count += 1
-		vwriter.release()
-	print("Saved to ", file_name)
-
-
 ############################################################
 #  Training
 ############################################################
@@ -393,13 +261,13 @@ if __name__ == '__main__':
 
 	# Parse command line arguments
 	parser = argparse.ArgumentParser(
-		description='Train Mask R-CNN to detect balloons.')
+		description='Train Mask R-CNN to detect regions in documents.')
 	parser.add_argument("command",
 						metavar="<command>",
 						help="'train' or 'splash'")
 	parser.add_argument('--dataset', required=False,
-						metavar="/path/to/balloon/dataset/",
-						help='Directory of the Balloon dataset')
+						metavar="/path/to/doc/dataset/",
+						help='Directory of the doc dataset')
 	parser.add_argument('--weights', required=True,
 						metavar="/path/to/weights.h5",
 						help="Path to weights .h5 file or 'coco'")
@@ -407,20 +275,11 @@ if __name__ == '__main__':
 						default=DEFAULT_LOGS_DIR,
 						metavar="/path/to/logs/",
 						help='Logs and checkpoints directory (default=logs/)')
-	parser.add_argument('--image', required=False,
-						metavar="path or URL to image",
-						help='Image to apply the color splash effect on')
-	parser.add_argument('--video', required=False,
-						metavar="path or URL to video",
-						help='Video to apply the color splash effect on')
 	args = parser.parse_args()
 
 	# Validate arguments
 	if args.command == "train":
 		assert args.dataset, "Argument --dataset is required for training"
-	elif args.command == "splash":
-		assert args.image or args.video,\
-			   "Provide --image or --video to apply color splash"
 
 	print("Weights: ", args.weights)
 	print("Dataset: ", args.dataset)
@@ -428,9 +287,9 @@ if __name__ == '__main__':
 
 	# Configurations
 	if args.command == "train":
-		config = BalloonConfig()
+		config = Config()
 	else:
-		class InferenceConfig(BalloonConfig):
+		class InferenceConfig(Config):
 			# Set batch size to 1 since we'll be running inference on
 			# one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
 			GPU_COUNT = 1
@@ -445,7 +304,7 @@ if __name__ == '__main__':
 	else:
 		model = modellib.MaskRCNN(mode="inference", config=config,
 								  model_dir=args.logs)
-	#model.save('trainedmrcnn.h5')
+
 	# Select weights file to load
 	if args.weights.lower() == "coco":
 		weights_path = COCO_WEIGHTS_PATH
@@ -476,9 +335,6 @@ if __name__ == '__main__':
 	# Train or evaluate
 	if args.command == "train":
 		train(model)
-	elif args.command == "splash":
-		detect_and_color_splash(model, image_path=args.image,
-								video_path=args.video)
 	else:
 		print("'{}' is not recognized. "
-			  "Use 'train' or 'splash'".format(args.command))
+			  "Use 'train' to start training the model.".format(args.command))
