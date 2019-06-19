@@ -107,19 +107,22 @@ def display_instances(image, boxes, masks, class_ids, class_names,
 
     # If no axis is passed, create one and automatically call show()
     auto_show = False
+    '''
     if not ax:
         _, ax = plt.subplots(1, figsize=figsize)
         auto_show = True
+    '''
 
     # Generate random colors
     colors = colors or random_colors(N)
 
     # Show area outside image boundaries.
     height, width = image.shape[:2]
-    ax.set_ylim(height + 10, -10)
-    ax.set_xlim(-10, width + 10)
-    ax.axis('off')
-    ax.set_title(title)
+    if ax:
+        ax.set_ylim(height + 10, -10)
+        ax.set_xlim(-10, width + 10)
+        ax.axis('off')
+        ax.set_title(title)
     cn=[]
     masked_image = image.astype(np.uint32).copy()
     for i in range(N):
@@ -147,8 +150,9 @@ def display_instances(image, boxes, masks, class_ids, class_names,
             caption = "{} {:.3f}".format(label, score) if score else label
         else:
             caption = captions[i]
-        ax.text(x1,(y1+y2)/2.0, caption,
-                color='w', size=9, backgroundcolor="none")
+        if ax:
+            ax.text(x1,(y1+y2)/2.0, caption,
+                    color='w', size=9, backgroundcolor="none")
 
         # Mask
         mask = masks[:, :, i]
@@ -167,12 +171,14 @@ def display_instances(image, boxes, masks, class_ids, class_names,
             # Subtract the padding and flip (y, x) to (x, y)
             verts = np.fliplr(verts) - 1
             p = Polygon(verts, facecolor="none", edgecolor=color)
-            ax.add_patch(p)
+            if ax:
+                ax.add_patch(p)
     #masked_image=cv2.resize(masked_image.astype(np.uint8),None,fx=1,fy=0.25)
-    ax.imshow(masked_image.astype(np.uint8))
-    if auto_show:
-        plt.show()
-    return colors,cn
+    if ax:
+        ax.imshow(masked_image.astype(np.uint8))
+        if auto_show:
+            plt.show()
+    return colors, cn
 
 
 def display_differences(image,
