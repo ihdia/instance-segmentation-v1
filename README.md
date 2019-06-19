@@ -16,6 +16,8 @@ python3 -m pip install -r requirements.txt
 ```bash
 python3 app.py
 ```
+If you get an error "No module Named skimage". It can be fixed by installing scikit-image. Enter- pip install scikit-image in your Terminal or Command Prompt.
+
 4. Upload the image and click on submit. To generate the json, click on `Create json`. This will generate a json which can be loaded in the annotator.
 
 ![app](/images/app.png)
