@@ -28,7 +28,7 @@ If you get an error "No module Named skimage". It can be fixed by installing sci
 
 ### To train the model
 
-1. Download the Indiscapes dataset from this [link](https://drive.google.com/drive/folders/1cHyRS0bYdE8s8e19RHZd6X0rnL_bGPMH?usp=sharing) and `mask_rcnn_coco.h5
+1. Download the Indiscapes dataset from this [link](http://ihdia.iiit.ac.in/indiscapes/) and `mask_rcnn_coco.h5
 `from this [link](https://github.com/matterport/Mask_RCNN/releases)
 2. Place the folders `bhoomi_images` and `PIH_images` and the file `mask_rcnn_coco.h5` inside the root folder (`Instance-segmentation`)
 3. To start training :
