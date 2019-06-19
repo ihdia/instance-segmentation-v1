@@ -77,19 +77,21 @@ class Dataset(utils.Dataset):
 		# Train or validation dataset?
 		assert subset in ["train", "val"]
 		dataset_dir = os.path.join(dataset_dir, subset)
-
+		#TODO:update the file name if required(to evaluate separately)
 		annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json")))
+		#annotations = json.load(open(os.path.join(dataset_dir, "via_region_data_bhoomi.json")))
+		#annotations = json.load(open(os.path.join(dataset_dir, "via_region_data_PIH.json")))
 		annotations=	annotations["_via_img_metadata"]
 		annotations = list(annotations.values())  # don't need the dict keys
 
 		# The VIA tool saves images in the JSON even if they don't have any
 		# annotations. Skip unannotated images.
 		annotations = [a for a in annotations if a['regions']]
-
+		IMAGE_PATH=[]
 		# Add images
 		for a in annotations:
 			class_ids=[]
-			# Get the x, y coordinaets of points of the polygons that make up
+			# Get the x, y coordinates of points of the polygons that make up
 			# the outline of each object instance. These are stores in the
 			# shape_attributes (see json format above)
 			# The if condition is needed to support VIA versions 1.x and 2.x.
@@ -134,11 +136,12 @@ class Dataset(utils.Dataset):
 			ff=a['filename'].split('/')[-2:]
 			#print(ff)
 			flg=0
-			if(ff[0]=='PIH_images'):
+			if ff[0]=='illustrations' :
 				flg=0
-				ff1=ff[0]+'/'+ff[1]
+				# print('pih')
+				ff1='/PIH_images'+'/'+ff[1]
 				image_path =ROOT_DIR+ff1
- 
+				# print(image_path)
 			else:
 				flg=1
 				image_path=os.path.join(dataset_dir,a['filename'])
@@ -150,12 +153,15 @@ class Dataset(utils.Dataset):
 					 flag=1
 				 if(flag==1):
 					 image_path=os.path.join(image_path,ppp)
-				image_path=image_path.replace("%20"," " )
-				image_path=image_path.replace("&","" )
-			 #print(image_path)
+					 image_path=image_path.replace("%20"," " )
+					 image_path=image_path.replace("&","" )
+			# print(image_path)
+			IMAGE_PATH.append(image_path)
 			try:
 				image = skimage.io.imread(image_path)
 			except Exception:
+				print(image_path)
+				print('Exception')
 				continue
 
 			height, width = image.shape[:2]
@@ -167,7 +173,6 @@ class Dataset(utils.Dataset):
 			 width=width, height=height,
 			 polygons=polygons,
 			 num_ids=class_ids)
-
 	
 	def load_mask(self, image_id):
 		"""Generate instance masks for an image.

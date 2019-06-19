@@ -962,7 +962,7 @@ def compute_per_region_ap(gt_boxes, gt_class_ids, gt_masks,
         #print("acc_arr : ",acc_arr)
         iouf=np.mean(np.array(overlaps_arr))
         iouc=np.sum(np.array(overlaps_arr))
-        accc=np.sum(np.array(acc_arr))
+        accc=np.mean(np.array(acc_arr))
         # iouarr=[]
         # for k in range(len(gt_match)):
         #     mask1=new_gt_masks[:,:,k]
@@ -1008,7 +1008,7 @@ def compute_per_region_ap(gt_boxes, gt_class_ids, gt_masks,
     mAP_range,PP,RR=compute_ap_range(gt_boxes, gt_class_ids, gt_masks,
                      pred_boxes, pred_class_ids, pred_scores, pred_masks, verbose=0)
 
-    mAP=np.array(mAP_range).mean()
+    #mAP=np.array(mAP_range).mean()
     
     return final_out,(weighted*1.0)/wt_sum,wt_arr,mAP,PP,RR,mAP_range,class_out,class_acc
 
