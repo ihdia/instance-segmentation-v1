@@ -11,7 +11,7 @@ python3 train.py train --dataset=/path/to/doc/dataset --weights=last
 # Train a new model starting from ImageNet weights
 python3 train.py train --dataset=/path/to/doc/dataset --weights=imagenet
 '''
-#  python3 train.py train --dataset=/home/abhishek/prusty/segr/datasets/doc --weights=coco
+
 
 import os
 import sys
@@ -75,7 +75,7 @@ class Dataset(utils.Dataset):
 		self.add_class("object", 10, "BL")
 
 		# Train or validation dataset?
-		assert subset in ["train", "val"]
+		assert subset in ["train", "val","test"]
 		dataset_dir = os.path.join(dataset_dir, subset)
 		#TODO:update the file name if required(to evaluate separately)
 		annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json")))
@@ -236,7 +236,7 @@ def train(model):
 	print("Training network heads")
 	model.train(dataset_train, dataset_val,
 						learning_rate=config.LEARNING_RATE,
-						epochs=22,
+						epochs=30,
 						layers='heads')
 
 	# Training - Stage 2
@@ -244,7 +244,7 @@ def train(model):
 	print("Fine tune Resnet stage 4 and up")
 	model.train(dataset_train, dataset_val,
 				learning_rate=config.LEARNING_RATE,
-				epochs=36,
+				epochs=50,
 				layers='4+')
 
 	# Training - Stage 3
@@ -252,7 +252,7 @@ def train(model):
 	print("Fine tune all layers")
 	model.train(dataset_train, dataset_val,
 				learning_rate=config.LEARNING_RATE / 10,
-				epochs=100,
+				epochs=65,
 				layers='all')
 
 

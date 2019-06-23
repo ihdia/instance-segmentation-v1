@@ -46,26 +46,6 @@ config = train.Config()
 DOC_DIR = os.path.join(ROOT_DIR, "datasets/doc/")
 
 
-# In[13]:
-
-
-# # Override the training configurations with a few
-# # changes for inferencing.
-# class InferenceConfig(config.__class__):
-# 	GPU_COUNT = 1
-# 	IMAGES_PER_GPU = 1
-# 	IMAGE_RESIZE_MODE = "square"
-# 	DETECTION_MIN_CONFIDENCE = 0.6
-# 	DETECTION_NMS_THRESHOLD = 0.3
-# 	PRE_NMS_LIMIT = 12000
-# 	RPN_ANCHOR_SCALES = (8,32,64,256,1024)
-# 	RPN_ANCHOR_RATIOS = [1,3,10]
-
-# 	POST_NMS_ROIS_INFERENCE = 12000
-# config = InferenceConfig()
-# config.display()
-
-
 # In[14]:
 
 
@@ -108,7 +88,7 @@ TEST_MODE = "inference"
 
 # Load validation dataset
 dataset = train.Dataset()
-dataset.load_data(DOC_DIR, "val")
+dataset.load_data(DOC_DIR, "test")
 # Must call before using the dataset
 dataset.prepare()
 print("Image Count: {}".format(len(dataset.image_ids)))
