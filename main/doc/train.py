@@ -45,7 +45,7 @@ class Config(Config):
 	GPU_COUNT=1
 	IMAGES_PER_GPU = 1
 	# Number of classes (including background)
-	NUM_CLASSES = 11 
+	NUM_CLASSES = 11
 	# Number of training steps per epoch
 	STEPS_PER_EPOCH = 500
 	USE_MINI_MASK = False
@@ -78,9 +78,9 @@ class Dataset(utils.Dataset):
 		assert subset in ["train", "val","test"]
 		dataset_dir = os.path.join(dataset_dir, subset)
 		#TODO:update the file name if required(to evaluate separately)
-		annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json")))
-		#annotations = json.load(open(os.path.join(dataset_dir, "via_region_data_bhoomi.json")))
-		#annotations = json.load(open(os.path.join(dataset_dir, "via_region_data_PIH.json")))
+		# annotations = json.load(open(os.path.join(dataset_dir, "via_region_data.json")))
+		# annotations = json.load(open(os.path.join(dataset_dir, "via_region_data_bhoomi.json")))
+		annotations = json.load(open(os.path.join(dataset_dir, "via_region_data_PIH.json")))
 		annotations=	annotations["_via_img_metadata"]
 		annotations = list(annotations.values())  # don't need the dict keys
 

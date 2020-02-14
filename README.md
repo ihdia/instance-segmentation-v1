@@ -10,7 +10,7 @@ python3 -m pip install -r requirements.txt
 
 ### To run Inference on your own image
 
-1. Download the pretrained model from this [link](https://drive.google.com/file/d/1TFUEjo4D7een7C7fGJV-xrU1cKi_hFeO/view?usp=sharing) 
+1. Download the pretrained model from this [link](https://drive.google.com/open?id=1EV0mFrRDCQ9ZHHgbVbjxSbWLhJ4XoBb7) 
 2. Place the `pretrained_model_indiscapes.h5` file in the root folder (`Instance-segmentation`)
 3. Start the  GUI application (`Instance-segmentation/main/doc/app.py`)
 ```bash
