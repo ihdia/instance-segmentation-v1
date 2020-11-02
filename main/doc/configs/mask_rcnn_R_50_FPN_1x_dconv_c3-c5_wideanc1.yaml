@@ -1,0 +1,26 @@
+_BASE_: "custom_Base-RCNN-FPN.yaml"
+MODEL:
+  WEIGHTS: output/mrcnn_r50_1x.pkl
+  MASK_ON: True
+  RESNETS:
+    DEPTH: 50
+    DEFORM_ON_PER_STAGE: [False, True, True, True] # on Res3,Res4,Res5
+    DEFORM_MODULATED: False
+  ANCHOR_GENERATOR:
+    SIZES: [[8],[32], [64], [256], [1024]]  # One size for each in feature map
+    ASPECT_RATIOS: [[ 1.0, 3.0,10.0]]  # Three aspect ratios (same for all in feature maps
+INPUT:
+  # MIN_SIZE_TRAIN: (800,)
+  MAX_SIZE_TEST: 1024
+  MAX_SIZE_TRAIN: 1024
+TEST:
+  EVAL_PERIOD: 10000
+DATASETS:
+  TRAIN: ("indiscapes_train",)
+  TEST: ("indiscapes_val",)
+SOLVER:
+  IMS_PER_BATCH: 4
+  BASE_LR: 0.02
+  STEPS: (60000, 80000)
+  MAX_ITER: 90000
+OUTPUT_DIR: "output/deconv_mask_rcnn_r50_1x_coco_wts_wideanc1"
